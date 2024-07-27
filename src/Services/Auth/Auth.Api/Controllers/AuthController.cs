@@ -41,7 +41,7 @@ namespace Auth.Api.Controllers
         }
 
         [HttpPost("signup")]
-        public async Task<ActionResult<AuthenticationResponse>> SignUpAsync(SignUpRequest request)
+        public async Task<ActionResult<AuthenticationResponse>> SignUpAsync([FromForm] SignUpRequest request)
         {
             try
             {

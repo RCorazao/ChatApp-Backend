@@ -1,12 +1,18 @@
 ﻿
 using Auth.Application.Identity;
+using Auth.Application.Storage;
+using Auth.External.Services;
 using Auth.Persistence.DataBase;
 using Auth.Persistence.Identity;
+using Auth.Persistence.Mapper;
 using Auth.Persistence.Services;
+using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Auth.Persistence
 {
@@ -45,7 +51,16 @@ namespace Auth.Persistence
                 options.User.RequireUniqueEmail = false;
             });
 
+            services.AddTransient<IFileStorageService, FileStorageService>();
             services.AddScoped<IAuthService, AuthService>();
+
+            MapperConfiguration mappingConfig = new(mc =>
+            {
+                mc.AddProfile(new MapperProfile());
+            });
+            services.AddTransient<AvatarUrlResolver>();
+            mappingConfig.AssertConfigurationIsValid();
+            services.AddSingleton(mappingConfig.CreateMapper());
 
             return services;
         }

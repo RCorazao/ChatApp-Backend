@@ -1,9 +1,12 @@
 ﻿
 using Auth.Application.DTOs;
 using Auth.Application.Identity;
+using Auth.Application.Storage;
 using Auth.Persistence.Helpers;
 using Auth.Persistence.Identity;
+using AutoMapper;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -19,26 +22,41 @@ namespace Auth.Persistence.Services
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly IConfiguration _configuration;
+        private readonly IFileStorageService _fileStorageService;
+        private readonly IMapper _mapper;
 
         public AuthService(
             UserManager<ApplicationUser> userManager, 
             SignInManager<ApplicationUser> signInManager,
-            IConfiguration configuration
+            IConfiguration configuration,
+            IFileStorageService fileStorageService,
+            IMapper mapper
             )
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _configuration = configuration;
+            _fileStorageService = fileStorageService;
+            _mapper = mapper;
         }
 
         public async Task<AuthenticationResponse> SignUpAsync(SignUpRequest request)
         {
+            string avatarUrl = null;
+
+            if (request.Avatar != null)
+            {
+                avatarUrl = await _fileStorageService.SaveFileAsync(request.Avatar);
+            }
+
             ApplicationUser user = new ApplicationUser
             {
                 FirstName = request.FirstName,
                 LastName = request.LastName,
                 Email = request.Email,
-                UserName = request.Email
+                UserName = request.Email,
+                FullName = request.FirstName.Trim() + " " + request.LastName.Trim(),
+                Avatar = avatarUrl
             };
 
             IdentityResult result = await _userManager.CreateAsync(user, request.Password);
@@ -62,7 +80,10 @@ namespace Auth.Persistence.Services
 
             if (response.Succeeded)
             {
+                var userDto = _mapper.Map<ApplicationUserDto>(user);
+
                 result.Succeeded = true;
+                result.User = userDto;
                 await GenerateToken(user, result);
             }
 

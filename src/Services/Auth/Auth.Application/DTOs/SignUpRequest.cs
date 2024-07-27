@@ -1,4 +1,6 @@
 ﻿
+using Auth.Application.Attributes;
+using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
 
 namespace Auth.Application.DTOs
@@ -13,5 +15,7 @@ namespace Auth.Application.DTOs
         public string Email { get; set; }
         [Required]
         public string Password { get; set; }
+        [ImageFile]
+        public IFormFile Avatar { get; set; }
     }
 }
