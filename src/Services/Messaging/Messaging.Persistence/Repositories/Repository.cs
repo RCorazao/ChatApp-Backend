@@ -1,17 +1,19 @@
 ﻿
+using Messaging.Domain.Entities;
 using Messaging.Domain.Entities.Base;
 using Messaging.Domain.Repositories;
 using Messaging.Persistence.Configurations;
 using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq.Expressions;
 
 namespace Messaging.Persistence.Repositories
 {
-    public class Repository<T> : IRepository<T> where T : IEntity
+    public class Repository<T> : IRepository<T> where T : Entity
     {
-        private readonly IMongoCollection<T> _collection;
+        protected readonly IMongoCollection<T> _collection;
 
         public Repository(MongoDBConfiguration context)
         {
@@ -19,10 +21,11 @@ namespace Messaging.Persistence.Repositories
             _collection = context.GetCollection<T>(tableAttribute.Name.ToLower() ?? nameof(T).ToLower());
         }
 
-        public async Task CreateAsync(T entity)
+        public async Task<T> CreateAsync(T entity)
         {
             entity.Id = ObjectId.GenerateNewId().ToString();
             await _collection.InsertOneAsync(entity);
+            return entity;
         }
 
         public async Task<List<T>> GetAllAsync()
@@ -33,6 +36,21 @@ namespace Messaging.Persistence.Repositories
         public async Task<List<T>> GetAllAsync(Expression<Func<T, bool>> filter)
         {
             return await _collection.Find(filter).ToListAsync();
+        }
+
+        public async Task<List<T>> GetAllAsync(Expression<Func<T, bool>> filter, List<string> excludeFields)
+        {
+            var projectionBuilder = Builders<T>.Projection;
+            ProjectionDefinition<T> projection = Builders<T>.Projection.Include("_id");
+
+            foreach (var field in excludeFields)
+            {
+                projection = projectionBuilder.Exclude(field);
+            }
+
+            var bsonDocuments = await _collection.Find(filter).Project(projection).ToListAsync();
+
+            return bsonDocuments.Select(doc => BsonSerializer.Deserialize<T>(doc)).ToList();
         }
 
         public async Task<T> GetAsync(string id)

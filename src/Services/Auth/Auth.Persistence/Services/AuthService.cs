@@ -84,7 +84,7 @@ namespace Auth.Persistence.Services
 
                 result.Succeeded = true;
                 result.User = userDto;
-                await GenerateToken(user, result);
+                await GenerateToken(userDto, result);
             }
 
             return result;
@@ -95,7 +95,7 @@ namespace Auth.Persistence.Services
             await _signInManager.SignOutAsync();
         }
 
-        private async Task GenerateToken(ApplicationUser user, IdentityAccess data)
+        private async Task GenerateToken(ApplicationUserDto user, IdentityAccess data)
         {
             var secretKey = _configuration.GetSection("SecretKey").Value;
             var key = Encoding.ASCII.GetBytes(secretKey!);
@@ -104,8 +104,8 @@ namespace Auth.Persistence.Services
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Name, user.FirstName),
-                new Claim(ClaimTypes.Surname, user.LastName)
+                new Claim("FullName", user.FullName),
+                new Claim("Avatar", user.Avatar)
             };
 
             var tokenDescriptor = new SecurityTokenDescriptor
