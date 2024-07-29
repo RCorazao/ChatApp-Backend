@@ -9,10 +9,15 @@ namespace Messaging.Application.Services
     public class UserService : IUserService
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IUserServiceProxy _userServiceProxy;
 
-        public UserService(IHttpContextAccessor httpContextAccessor)
+        public UserService(
+            IHttpContextAccessor httpContextAccessor,
+            IUserServiceProxy userServiceProxy
+            )
         {
             _httpContextAccessor = httpContextAccessor;
+            _userServiceProxy = userServiceProxy;
         }
 
         public UserDto GetUserFromClaims()
@@ -28,6 +33,12 @@ namespace Messaging.Application.Services
             };
 
             return userDto;
+        }
+
+        public async Task<dynamic> GetUserById(int id)
+        {
+            var result = await _userServiceProxy.GetUserByIdAsync(id);
+            return result;
         }
     }
 }

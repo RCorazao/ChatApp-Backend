@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Messaging.Application\Messaging.Application.csproj" />
+    <ProjectReference Include="..\Messaging.External\Messaging.External.csproj" />
     <ProjectReference Include="..\Messaging.Persistence\Messaging.Persistence.csproj" />
   </ItemGroup>
 

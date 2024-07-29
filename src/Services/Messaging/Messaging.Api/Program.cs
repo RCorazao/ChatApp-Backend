@@ -1,5 +1,6 @@
 using Messaging.Domain.Repositories;
 using Messaging.Application;
+using Messaging.External;
 using Messaging.Persistence.Configurations;
 using Messaging.Persistence.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -9,7 +10,8 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
-    .AddApplication();
+    .AddApplication()
+    .AddExternal(builder.Configuration);
 
 // Add services to the container.
 

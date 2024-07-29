@@ -37,7 +37,19 @@ namespace Messaging.Api.Controllers
         {
             UserDto user = _userService.GetUserFromClaims();
 
+            if (user.Id == userId)
+            {
+                return StatusCode(StatusCodes.Status400BadRequest,
+                    ResponseApiService.Response(StatusCodes.Status400BadRequest, message: "Invalid user"));
+            }
+
             var chat = await _chatService.CreatePrivate(user, userId);
+
+            if (chat == null)
+            {
+                return StatusCode(StatusCodes.Status400BadRequest,
+                    ResponseApiService.Response(StatusCodes.Status400BadRequest, message: "Invalid user"));
+            }
 
             return StatusCode(StatusCodes.Status201Created,
                 ResponseApiService.Response(StatusCodes.Status201Created, chat));

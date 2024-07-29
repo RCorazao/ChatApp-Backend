@@ -1,11 +1,15 @@
-﻿using Messaging.Application.Features;
+﻿using Messaging.Application.DTOs;
+using Messaging.Application.Features;
+using Messaging.Application.Interfaces;
 using Messaging.Domain.Entities;
 using Messaging.Domain.Repositories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Driver;
 
 namespace Messaging.Api.Controllers
 {
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [ApiController]
     [Route("api/messages")]
     public class MessageController : ControllerBase
@@ -13,27 +17,36 @@ namespace Messaging.Api.Controllers
         private readonly ILogger<MessageController> _logger;
         private readonly IRepository<Message> _messageRepository;
         private readonly IChatRepository _chatRepository;
+        private readonly IUserService _userService;
 
         public MessageController(
             ILogger<MessageController> logger,
             IRepository<Message> userRepository,
-            IChatRepository chatRepository
+            IChatRepository chatRepository,
+            IUserService userService
             )
         {
             _logger = logger;
             _messageRepository = userRepository;
             _chatRepository = chatRepository;
+            _userService = userService;
         }
 
         [HttpPost()]
         public async Task<IActionResult> Create(string chatId, string content)
         {
-            var currentUserId = 1;
+            UserDto user = _userService.GetUserFromClaims();
             var chat = await _chatRepository.GetAsync( chatId );
+
+            if ( chat == null )
+            {
+                return StatusCode(StatusCodes.Status400BadRequest,
+                    ResponseApiService.Response(StatusCodes.Status400BadRequest, message: "Invalid chat"));
+            }
 
             var message = new Message
             {
-                UserId = currentUserId,
+                UserId = user.Id,
                 ChatId = chatId,
                 Content = content
             };
@@ -55,11 +68,10 @@ namespace Messaging.Api.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> Get(string id)
+        public async Task<dynamic> Get(int id)
         {
-            var user = await _messageRepository.GetAsync(id);
-            return StatusCode(StatusCodes.Status200OK,
-                ResponseApiService.Response(StatusCodes.Status200OK, user));
+            var result = await _userService.GetUserById(id);
+            return result;
         }
 
         [HttpDelete("{id}")]
