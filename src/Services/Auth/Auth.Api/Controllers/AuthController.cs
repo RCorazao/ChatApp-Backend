@@ -1,4 +1,5 @@
 ﻿using Auth.Application.DTOs;
+using Auth.Application.Features;
 using Auth.Application.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -27,16 +28,19 @@ namespace Auth.Api.Controllers
             {
                 var result = await _authService.SignInAsync(request);
 
-                if (!result.Succeeded)
+                if (result is null)
                 {
-                    return BadRequest("Access denied");
+                    return StatusCode(StatusCodes.Status400BadRequest,
+                        ResponseApiService.Response(StatusCodes.Status400BadRequest, message: "Incorrect credentials"));
                 }
 
-                return Ok(result);
+                return StatusCode(StatusCodes.Status200OK,
+                    ResponseApiService.Response(StatusCodes.Status200OK, result));
             }
             catch (Exception ex)
             {
-                return StatusCode(500, ex.Message);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                        ResponseApiService.Response(StatusCodes.Status500InternalServerError, message: ex.Message));
             }
         }
 
@@ -58,14 +62,6 @@ namespace Auth.Api.Controllers
             {
                 return StatusCode(500, ex.Message);
             }
-        }
-
-        [HttpPost("signout")]
-        public async Task<ActionResult> SignOutAsync()
-        {
-            await _authService.SignOutAsync();
-
-            return NoContent();
         }
     }
 }

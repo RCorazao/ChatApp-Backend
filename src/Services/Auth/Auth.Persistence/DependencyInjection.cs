@@ -53,6 +53,7 @@ namespace Auth.Persistence
 
             services.AddTransient<IFileStorageService, FileStorageService>();
             services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IUserService, UserService>();
 
             MapperConfiguration mappingConfig = new(mc =>
             {

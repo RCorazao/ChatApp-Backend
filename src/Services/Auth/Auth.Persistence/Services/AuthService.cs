@@ -64,30 +64,28 @@ namespace Auth.Persistence.Services
             return result.ToAuthenticationResult();
         }
 
-        public async Task<IdentityAccess> SignInAsync(SignInRequest request)
+        public async Task<IdentityAccess?> SignInAsync(SignInRequest request)
         {
             var result = new IdentityAccess();
 
             var user = await _userManager.FindByEmailAsync(request.Email);
 
-            if (user == null)
-            {
-                result.Succeeded = false;
-                return result;
-            }
+            if (user == null) return null;
 
             var response = await _signInManager.CheckPasswordSignInAsync(user, request.Password, false);
 
-            if (response.Succeeded)
+            if (!response.Succeeded) return null;
+
+            var userDto = _mapper.Map<ApplicationUserDto>(user);
+
+            var identityAccess = new IdentityAccess
             {
-                var userDto = _mapper.Map<ApplicationUserDto>(user);
+                User = userDto
+            };
 
-                result.Succeeded = true;
-                result.User = userDto;
-                await GenerateToken(userDto, result);
-            }
+            await GenerateToken(userDto, identityAccess);
 
-            return result;
+            return identityAccess;
         }
 
         public async Task SignOutAsync()
