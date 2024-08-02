@@ -33,10 +33,10 @@ namespace Messaging.Api.Controllers
         }
 
         [HttpPost()]
-        public async Task<IActionResult> Create(string chatId, string content)
+        public async Task<IActionResult> Create([FromBody] MessageRequestDto request)
         {
             UserDto user = _userService.GetUserFromClaims();
-            var chat = await _chatRepository.GetAsync( chatId );
+            var chat = await _chatRepository.GetAsync( request.ChatId );
 
             if ( chat == null )
             {
@@ -47,13 +47,13 @@ namespace Messaging.Api.Controllers
             var message = new Message
             {
                 UserId = user.Id,
-                ChatId = chatId,
-                Content = content
+                ChatId = request.ChatId,
+                Content = request.Content
             };
 
             var record = await _messageRepository.CreateAsync(message);
 
-            await _chatRepository.AddMessageAsync(chatId, record);
+            await _chatRepository.AddMessageAsync(request.ChatId, record);
 
             return StatusCode(StatusCodes.Status201Created,
                 ResponseApiService.Response(StatusCodes.Status201Created, message));

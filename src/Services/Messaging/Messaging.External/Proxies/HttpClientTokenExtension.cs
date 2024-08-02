@@ -9,15 +9,15 @@ namespace Messaging.External.Proxies
 {
     public static class HttpClientTokenExtension
     {
-        public static void AddBearerToken(this HttpClient client, IHttpContextAccessor context)
+        public static void AddBearerToken(this HttpClient client, IHttpContextAccessor contextAccessor)
         {
-            if (context.HttpContext.User.Identity.IsAuthenticated && context.HttpContext.Request.Headers.ContainsKey("Authorization"))
+            var context = contextAccessor.HttpContext;
+            if (context.User.Identity.IsAuthenticated && context.Request.Cookies.ContainsKey("accessToken"))
             {
-                var token = context.HttpContext.Request.Headers["Authorization"].ToString();
-
+                var token = context.Request.Cookies["accessToken"];
                 if (!string.IsNullOrEmpty(token))
                 {
-                    client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", token);
+                    client.DefaultRequestHeaders.Add("Cookie", $"accessToken={token}");
                 }
             }
         }

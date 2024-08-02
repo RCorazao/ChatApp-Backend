@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Messaging.Api.Controllers
 {
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [ApiController]
     [Route("api/chats")]
     public class ChatController : ControllerBase
@@ -66,12 +66,18 @@ namespace Messaging.Api.Controllers
                 ResponseApiService.Response(StatusCodes.Status200OK, chats));
         }
 
-        [HttpGet("{id}")]
+        [HttpPost("{id}")]
         public async Task<IActionResult> Get(string id, [FromBody] ChatRequestDto request)
         {
             var user = _userService.GetUserFromClaims();
 
             var chat = await _chatService.GetPaginated(user, id, request.PageNumber, request.PageSize);
+
+            if (chat == null)
+            {
+                return StatusCode(StatusCodes.Status400BadRequest,
+                    ResponseApiService.Response(StatusCodes.Status400BadRequest, message: "Invalid chat"));
+            }
 
             return StatusCode(StatusCodes.Status200OK,
                 ResponseApiService.Response(StatusCodes.Status200OK, chat));

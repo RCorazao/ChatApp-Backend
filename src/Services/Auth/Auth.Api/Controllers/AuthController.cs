@@ -34,8 +34,10 @@ namespace Auth.Api.Controllers
                         ResponseApiService.Response(StatusCodes.Status400BadRequest, message: "Incorrect credentials"));
                 }
 
+                SetTokenCookie(result.AccessToken, result.ExpiresAt);
+
                 return StatusCode(StatusCodes.Status200OK,
-                    ResponseApiService.Response(StatusCodes.Status200OK, result));
+                    ResponseApiService.Response(StatusCodes.Status200OK, data: result.User, message: "Login successful"));
             }
             catch (Exception ex)
             {
@@ -43,6 +45,7 @@ namespace Auth.Api.Controllers
                         ResponseApiService.Response(StatusCodes.Status500InternalServerError, message: ex.Message));
             }
         }
+
 
         [HttpPost("signup")]
         public async Task<ActionResult<AuthenticationResponse>> SignUpAsync([FromForm] SignUpRequest request)
@@ -62,6 +65,19 @@ namespace Auth.Api.Controllers
             {
                 return StatusCode(500, ex.Message);
             }
+        }
+
+        private void SetTokenCookie(string token, DateTime? expires)
+        {
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = expires
+            };
+
+            Response.Cookies.Append("accessToken", token, cookieOptions);
         }
     }
 }

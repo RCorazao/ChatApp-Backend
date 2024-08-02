@@ -1,13 +1,14 @@
 ﻿using Auth.Application.DTOs;
 using Auth.Application.Features;
 using Auth.Application.Identity;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Auth.Api.Controllers
 {
-    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Authorize]
     [ApiController]
     [Route("api/users")]
     public class UserController : ControllerBase
@@ -31,7 +32,7 @@ namespace Auth.Api.Controllers
 
             if (users == null || users.Count == 0)
                 return StatusCode(StatusCodes.Status404NotFound,
-                   ResponseApiService.Response(StatusCodes.Status404NotFound));
+                   ResponseApiService.Response(StatusCodes.Status404NotFound, message: "Users not found"));
 
             return StatusCode(StatusCodes.Status200OK,
                 ResponseApiService.Response(StatusCodes.Status200OK, users));
@@ -48,6 +49,23 @@ namespace Auth.Api.Controllers
 
             return StatusCode(StatusCodes.Status200OK,
                 ResponseApiService.Response(StatusCodes.Status200OK, users));
+        }
+
+        [HttpGet("me")]
+        public async Task<IActionResult> GetCurrentUser(int id)
+        {
+            var userClaims = User.Claims;
+
+            var user = new ApplicationUserDto
+            {
+                Id = int.Parse(userClaims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value),
+                FullName = userClaims.FirstOrDefault(c => c.Type == "FullName")?.Value,
+                Email = userClaims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value,
+                Avatar = userClaims.FirstOrDefault(c => c.Type == "Avatar")?.Value
+            };
+
+            return StatusCode(StatusCodes.Status200OK,
+                ResponseApiService.Response(StatusCodes.Status200OK, user));
         }
     }
 }
