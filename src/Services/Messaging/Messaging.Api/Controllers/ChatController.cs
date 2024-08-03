@@ -32,18 +32,18 @@ namespace Messaging.Api.Controllers
             _chatService = chatService;
         }
 
-        [HttpPost()]
-        public async Task<IActionResult> Create(int userId)
+        [HttpPost("create-chat")]
+        public async Task<IActionResult> Create([FromBody]CreateChatRequestDto request)
         {
             UserDto user = _userService.GetUserFromClaims();
 
-            if (user.Id == userId)
+            if (user.Id == request.UserId)
             {
                 return StatusCode(StatusCodes.Status400BadRequest,
                     ResponseApiService.Response(StatusCodes.Status400BadRequest, message: "Invalid user"));
             }
 
-            var chat = await _chatService.CreatePrivate(user, userId);
+            var chat = await _chatService.CreatePrivate(user, request.UserId);
 
             if (chat == null)
             {
@@ -71,7 +71,7 @@ namespace Messaging.Api.Controllers
         {
             var user = _userService.GetUserFromClaims();
 
-            var chat = await _chatService.GetPaginated(user, id, request.PageNumber, request.PageSize);
+            var chat = await _chatService.GetWithSkip(user, id, request.Skip, request.PageSize);
 
             if (chat == null)
             {
@@ -81,6 +81,17 @@ namespace Messaging.Api.Controllers
 
             return StatusCode(StatusCodes.Status200OK,
                 ResponseApiService.Response(StatusCodes.Status200OK, chat));
+        }
+
+        [HttpPost("search-chats")]
+        public async Task<IActionResult> SearchChats(SearchChatsRequestDto request)
+        {
+            UserDto user = _userService.GetUserFromClaims();
+
+            var chats = await _chatService.SearchChats(user, request.Filter, request.PageNumber, request.PageSize);
+
+            return StatusCode(StatusCodes.Status200OK,
+                ResponseApiService.Response(StatusCodes.Status200OK, chats));
         }
 
         [HttpDelete("{id}")]

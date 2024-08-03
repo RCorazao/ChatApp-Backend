@@ -1,6 +1,7 @@
 ﻿using Auth.Application.DTOs;
 using Auth.Application.Features;
 using Auth.Application.Identity;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Auth.Api.Controllers
@@ -67,6 +68,26 @@ namespace Auth.Api.Controllers
             }
         }
 
+        [Authorize]
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            try
+            {
+                ClearTokenCookie();
+
+                return StatusCode(StatusCodes.Status200OK,
+                    ResponseApiService.Response(StatusCodes.Status200OK, message: "Logout successful"));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                        ResponseApiService.Response(StatusCodes.Status500InternalServerError, message: ex.Message));
+            }
+        }
+
+        // ==================================================================
+
         private void SetTokenCookie(string token, DateTime? expires)
         {
             var cookieOptions = new CookieOptions
@@ -78,6 +99,19 @@ namespace Auth.Api.Controllers
             };
 
             Response.Cookies.Append("accessToken", token, cookieOptions);
+        }
+
+        private void ClearTokenCookie()
+        {
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddDays(-1)
+            };
+
+            Response.Cookies.Append("accessToken", string.Empty, cookieOptions);
         }
     }
 }

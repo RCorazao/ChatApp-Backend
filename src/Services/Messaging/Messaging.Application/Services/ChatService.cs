@@ -70,6 +70,55 @@ namespace Messaging.Application.Services
             return _mapper.Map<ChatDto>(chat);
         }
 
+        public async Task<ChatDto> GetWithSkip(UserDto user, string chatId, int skip, int pageSize)
+        {
+            var chat = await _chatRepository.GetMessagesChatAsync(user.Id, chatId, skip, pageSize);
+
+            return _mapper.Map<ChatDto>(chat);
+        }
+
+        public async Task<List<SearchChatsResponseDto>> SearchChats(UserDto user, string filter, int pageNumber, int pageSize)
+        {
+            GetChatsProxyRequestDto request = new GetChatsProxyRequestDto
+            {
+                Filter = filter,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
+
+            var usersProxy = await _userServiceProxy.GetUsersAsync(request);
+
+            var chats = await _chatRepository.GetUserChatsAsync(user.Id);
+            var contactIds = chats.SelectMany(p => p.Users)
+                                .Where(p => p.Id != user.Id)
+                                .Select(p => p.Id)
+                                .Distinct()
+                                .ToList();
+
+            var result = new List<SearchChatsResponseDto>();
+
+            if (usersProxy is not null)
+            {
+                foreach (var userProxy in usersProxy)
+                {
+                    if (userProxy.Id == user.Id) continue;
+                    result.Add(new SearchChatsResponseDto
+                    {
+                        Id = userProxy.Id,
+                        FullName = userProxy.FullName,
+                        Email = userProxy.Email,
+                        Avatar = userProxy.Avatar,
+                        IsContact = contactIds.Contains(userProxy.Id)
+                    });
+                }
+            }
+
+            return result;
+        }
+
+
+        // ===================================================================================
+
         private async Task UserMapping(List<ChatDto> chatDtos, UserDto currentUser)
         {
             var userIds = chatDtos.SelectMany(p => p.Users)

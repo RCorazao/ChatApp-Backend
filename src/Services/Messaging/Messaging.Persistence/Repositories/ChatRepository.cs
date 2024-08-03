@@ -78,6 +78,32 @@ namespace Messaging.Persistence.Repositories
             return chat;
         }
 
+        public async Task<Chat?> GetMessagesChatAsync(int currentUserId, string chatId, int skip, int pageSize)
+        {
+            var filter = Builders<Chat>.Filter.And(
+                Builders<Chat>.Filter.Eq(c => c.Id, chatId),
+                Builders<Chat>.Filter.ElemMatch(c => c.Users, user => user.Id == currentUserId)
+            );
+
+            var chatBson = await _collection.Find(filter)
+                                            .Project(Builders<Chat>.Projection
+                                                .Include(c => c.Id)
+                                                .Include(c => c.Name)
+                                                .Include(c => c.Type)
+                                                .Include(c => c.Users)
+                                                .Slice(c => c.Messages, skip, pageSize)) // Slice from start after messageId
+                                            .FirstOrDefaultAsync();
+
+            if (chatBson == null)
+            {
+                return null;
+            }
+
+            var chat = BsonSerializer.Deserialize<Chat>(chatBson);
+            return chat;
+        }
+
+
         public async Task<List<Chat>> GetUserChatsAsync(int userId)
         {
             var filter = Builders<Chat>.Filter.ElemMatch(c => c.Users, user => user.Id == userId);

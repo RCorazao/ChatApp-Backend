@@ -3,7 +3,7 @@ namespace Messaging.Application.DTOs
 {
     public class ChatRequestDto
     {
-        public int PageNumber { get; set; } = 1;
+        public int Skip { get; set; } = 0;
         public int PageSize { get; set; } = 10;
     }
 }
