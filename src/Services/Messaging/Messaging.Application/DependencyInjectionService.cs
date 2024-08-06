@@ -19,6 +19,7 @@ namespace Messaging.Application
             services.AddHttpContextAccessor();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IChatService, ChatService>();
+            services.AddScoped<IMessageService, MessageService>();
 
             return services;
         }

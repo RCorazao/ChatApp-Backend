@@ -18,45 +18,41 @@ namespace Messaging.Api.Controllers
         private readonly IRepository<Message> _messageRepository;
         private readonly IChatRepository _chatRepository;
         private readonly IUserService _userService;
+        private readonly IMessageService _messageService;
+        private readonly INotificationService _notificationService;
 
         public MessageController(
             ILogger<MessageController> logger,
             IRepository<Message> userRepository,
             IChatRepository chatRepository,
-            IUserService userService
+            IUserService userService,
+            IMessageService messageService,
+            INotificationService notificationService
             )
         {
             _logger = logger;
             _messageRepository = userRepository;
             _chatRepository = chatRepository;
             _userService = userService;
+            _messageService = messageService;
+            _notificationService = notificationService;
         }
 
         [HttpPost()]
         public async Task<IActionResult> Create([FromBody] MessageRequestDto request)
         {
             UserDto user = _userService.GetUserFromClaims();
-            var chat = await _chatRepository.GetAsync( request.ChatId );
 
-            if ( chat == null )
+            var result = await _messageService.Create(user, request.ChatId, request.Content);
+
+            if (result is null)
             {
                 return StatusCode(StatusCodes.Status400BadRequest,
-                    ResponseApiService.Response(StatusCodes.Status400BadRequest, message: "Invalid chat"));
+                ResponseApiService.Response(StatusCodes.Status400BadRequest, message: "Invalid chat"));
             }
 
-            var message = new Message
-            {
-                UserId = user.Id,
-                ChatId = request.ChatId,
-                Content = request.Content
-            };
-
-            var record = await _messageRepository.CreateAsync(message);
-
-            await _chatRepository.AddMessageAsync(request.ChatId, record);
-
             return StatusCode(StatusCodes.Status201Created,
-                ResponseApiService.Response(StatusCodes.Status201Created, message));
+                ResponseApiService.Response(StatusCodes.Status201Created, result));
         }
 
         [HttpGet()]

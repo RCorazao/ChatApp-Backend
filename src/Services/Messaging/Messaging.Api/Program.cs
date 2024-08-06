@@ -6,12 +6,9 @@ using Messaging.Persistence.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Messaging.External.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
-
-builder.Services
-    .AddApplication()
-    .AddExternal(builder.Configuration);
 
 // CORS
 var corsOrigins = builder.Configuration["AllowedCorsOrigins"]
@@ -26,6 +23,10 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod()
             .AllowCredentials());
 });
+
+builder.Services
+    .AddApplication()
+    .AddExternal(builder.Configuration);
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -82,5 +83,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<NotificationHub>("/notificationHub");
 
 app.Run();

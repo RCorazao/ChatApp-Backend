@@ -60,7 +60,7 @@ namespace Messaging.Application.Services
 
             await UserMapping(chatDtos, user);
 
-            return chatDtos;
+            return chatDtos.OrderByDescending(p => p.Messages[0]?.CreatedAt).ToList();
         }
 
         public async Task<ChatDto> GetPaginated(UserDto user, string chatId, int pageNumber, int pageSize)
