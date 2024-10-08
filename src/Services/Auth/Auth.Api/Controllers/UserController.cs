@@ -2,13 +2,14 @@
 using Auth.Application.Features;
 using Auth.Application.Identity;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
 namespace Auth.Api.Controllers
 {
-    [Authorize]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [ApiController]
     [Route("api/users")]
     public class UserController : ControllerBase

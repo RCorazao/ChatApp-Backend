@@ -16,26 +16,20 @@ namespace Messaging.Api.Controllers
     {
         private readonly ILogger<MessageController> _logger;
         private readonly IRepository<Message> _messageRepository;
-        private readonly IChatRepository _chatRepository;
         private readonly IUserService _userService;
         private readonly IMessageService _messageService;
-        private readonly INotificationService _notificationService;
 
         public MessageController(
             ILogger<MessageController> logger,
             IRepository<Message> userRepository,
-            IChatRepository chatRepository,
             IUserService userService,
-            IMessageService messageService,
-            INotificationService notificationService
+            IMessageService messageService
             )
         {
             _logger = logger;
             _messageRepository = userRepository;
-            _chatRepository = chatRepository;
             _userService = userService;
             _messageService = messageService;
-            _notificationService = notificationService;
         }
 
         [HttpPost()]

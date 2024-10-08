@@ -1,17 +1,10 @@
 using Auth.Persistence;
-using Auth.Persistence.DataBase;
-using Auth.Persistence.Identity;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseUrls(builder.Configuration["url"]);
 
 // CORS
 var corsOrigins = builder.Configuration["AllowedCorsOrigins"]
@@ -42,42 +35,19 @@ var secretKey = Encoding.ASCII.GetBytes(
     builder.Configuration.GetValue<string>("SecretKey")
 );
 
-builder.Services.AddAuthentication(options =>
-    {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    })
-    .AddJwtBearer( options =>
-    {
-        options.RequireHttpsMetadata = false;
-        options.SaveToken = true;
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(secretKey),
-            ValidateIssuer = false,
-            ValidateAudience = false
-        };
-
-        options.Events = new JwtBearerEvents
-        {
-            OnMessageReceived = context =>
-            {
-                // Read the token from the cookie
-                var token = context.Request.Cookies["accessToken"];
-                context.Token = token;
-                return Task.CompletedTask;
-            }
-        };
-    });
-
-var policy = new AuthorizationPolicyBuilder("Identity.Application", "Bearer")
-                    .RequireAuthenticatedUser().Build();
-
-builder.Services.AddAuthorization(o =>
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(x =>
 {
-    o.DefaultPolicy = policy;
+    x.RequireHttpsMetadata = false;
+    x.SaveToken = true;
+    x.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(secretKey),
+        ValidateIssuer = false,
+        ValidateAudience = false
+    };
 });
+
 
 var app = builder.Build();
 

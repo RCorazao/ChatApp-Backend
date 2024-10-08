@@ -8,9 +8,9 @@ namespace Messaging.External.SignalR
     {
         public string? GetUserId(HubConnectionContext connection)
         {
-            var jwtToken = connection.GetHttpContext()?.Request.Cookies["accessToken"];
+            var jwtToken = connection.GetHttpContext()?.Request.Query["access_token"].ToString();
 
-            if (jwtToken != null)
+            if (!string.IsNullOrEmpty(jwtToken))
             {
                 var handler = new JwtSecurityTokenHandler();
                 var token = handler.ReadToken(jwtToken) as JwtSecurityToken;

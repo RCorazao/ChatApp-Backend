@@ -9,6 +9,7 @@ using System.Text;
 using Messaging.External.SignalR;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseUrls(builder.Configuration["url"]);
 
 // CORS
 var corsOrigins = builder.Configuration["AllowedCorsOrigins"]
@@ -44,29 +45,19 @@ var secretKey = Encoding.ASCII.GetBytes(
                builder.Configuration.GetValue<string>("SecretKey")
            );
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(x =>
-{
-    x.RequireHttpsMetadata = false;
-    x.SaveToken = true;
-    x.TokenValidationParameters = new TokenValidationParameters
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(x =>
     {
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(secretKey),
-        ValidateIssuer = false,
-        ValidateAudience = false
-    };
-    x.Events = new JwtBearerEvents
-    {
-        OnMessageReceived = context =>
+        x.RequireHttpsMetadata = false;
+        x.SaveToken = true;
+        x.TokenValidationParameters = new TokenValidationParameters
         {
-            if (context.Request.Cookies.ContainsKey("accessToken"))
-            {
-                context.Token = context.Request.Cookies["accessToken"];
-            }
-            return Task.CompletedTask;
-        }
-    };
-});
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(secretKey),
+            ValidateIssuer = false,
+            ValidateAudience = false
+        };
+    });
 
 var app = builder.Build();
 

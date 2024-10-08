@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Messaging.Api.Controllers
 {
-    [Authorize]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [ApiController]
     [Route("api/chats")]
     public class ChatController : ControllerBase

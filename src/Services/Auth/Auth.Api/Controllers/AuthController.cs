@@ -35,10 +35,10 @@ namespace Auth.Api.Controllers
                         ResponseApiService.Response(StatusCodes.Status400BadRequest, message: "Incorrect credentials"));
                 }
 
-                SetTokenCookie(result.AccessToken, result.ExpiresAt);
+                //SetTokenCookie(result.AccessToken, result.ExpiresAt);
 
                 return StatusCode(StatusCodes.Status200OK,
-                    ResponseApiService.Response(StatusCodes.Status200OK, data: result.User, message: "Login successful"));
+                    ResponseApiService.Response(StatusCodes.Status200OK, data: result, message: "Login successful"));
             }
             catch (Exception ex)
             {
@@ -94,7 +94,7 @@ namespace Auth.Api.Controllers
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Strict,
+                SameSite = SameSiteMode.None,
                 Expires = expires
             };
 
